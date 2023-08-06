@@ -10,5 +10,5 @@
 - Support for Paper 1.19.3+
 - English translation
 
-[unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/olivierlacan/keep-a-changelog/releases/tag/v1.0.0
+[unreleased]: https://github.com/qixils/fahare/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/qixils/fahare/releases/tag/v1.0.0
