@@ -1,0 +1,8 @@
+name: Fahare
+description: Resets the world when all online players die.
+version: '${version}'
+main: dev.qixils.fahare.Fahare
+api-version: '1.19'
+authors:
+  - qixils
+website: https://github.com/qixils/Fahare
