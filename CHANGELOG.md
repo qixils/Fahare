@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- MIT license
+
 ### Changed
 
 - Made more log messages translatable
