@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Made more log messages translatable
+- De-duplicated error logs
+- Switched log messages to use the world short name instead of the key to match vanilla logs
+
 ## [1.0.0] - 2023-08-06
 
 ### Added

@@ -1,5 +1,6 @@
 package dev.qixils.fahare;
 
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.translation.GlobalTranslator;
@@ -99,7 +100,7 @@ public final class Fahare extends JavaPlugin implements Listener {
         // get world data
         World world = worlds.remove(0);
         String worldName = world.getName();
-        Component worldKey = text(world.getKey().asString());
+        Component worldKey = text(worldName);
         WorldCreator creator = new WorldCreator(worldName, world.getKey());
         creator.copy(world).seed(RANDOM.nextLong());
 
@@ -108,7 +109,7 @@ public final class Fahare extends JavaPlugin implements Listener {
             try {
                 // delete world
                 Path worldFolder = new File(Bukkit.getWorldContainer(), worldName).toPath();
-                getLogger().info("Deleting folder " + worldFolder);
+                getComponentLogger().info(translatable("fhr.log.delete", text(worldFolder.toString())));
                 IOUtils.deleteDirectory(worldFolder);
 
                 // create new world
@@ -116,7 +117,7 @@ public final class Fahare extends JavaPlugin implements Listener {
                 Bukkit.getServer().sendMessage(translatable("fhr.success", worldKey));
             } catch (Exception e) {
                 Component error = translatable("fhr.error", NamedTextColor.RED, worldKey);
-                Bukkit.getServer().sendMessage(error);
+                Audience.audience(Bukkit.getOnlinePlayers()).sendMessage(error);
                 getComponentLogger().warn(error, e);
             }
         } else {
