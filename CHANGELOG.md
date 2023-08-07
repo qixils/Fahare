@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2023-08-07
+
 ### Added
 
 - MIT license
@@ -20,5 +22,6 @@
 - Support for Paper 1.19.3+
 - English translation
 
-[unreleased]: https://github.com/qixils/fahare/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/qixils/fahare/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/qixils/fahare/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/qixils/fahare/releases/tag/v1.0.0
