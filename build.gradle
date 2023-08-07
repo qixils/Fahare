@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'dev.qixils'
-version = '1.0.1-SNAPSHOT'
+version = '1.0.1'
 def mcVersion = '1.19.3'
 
 repositories {
