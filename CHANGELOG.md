@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added a plugin config with various settings
+- Deleted worlds are now backed up in the `fahare-backups` folder by default (configurable)
+
 ## [1.0.1] - 2023-08-07
 
 ### Added

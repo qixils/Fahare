@@ -19,12 +19,21 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
@@ -37,6 +46,11 @@ public final class Fahare extends JavaPlugin implements Listener {
     private final NamespacedKey fakeOverworldKey = new NamespacedKey(this, "overworld");
     private final NamespacedKey limboWorldKey = new NamespacedKey(this, "limbo");
     private World limboWorld;
+    private Path worldContainer;
+    private @Nullable Path backupContainer;
+    // config
+    private boolean backup = true;
+    private boolean autoReset = true;
 
     private static @NotNull World overworld() {
         return Objects.requireNonNull(Bukkit.getWorld(REAL_OVERWORLD_KEY), "Overworld not found");
@@ -48,7 +62,21 @@ public final class Fahare extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        Bukkit.getPluginManager().registerEvents(this, this);
+        // Load config
+        loadConfig();
+
+        // Create backup folder
+        worldContainer = Bukkit.getWorldContainer().toPath();
+        backupContainer = worldContainer.resolve("fahare-backups");
+
+        if (!Files.exists(backupContainer)) {
+            try {
+                Files.createDirectory(backupContainer);
+            } catch (Exception e) {
+                getComponentLogger().error(translatable("fhr.log.backup-folder"), e);
+                backupContainer = null;
+            }
+        }
 
         // Register i18n
         TranslationRegistry registry = TranslationRegistry.create(new NamespacedKey(this, "translations"));
@@ -70,8 +98,10 @@ public final class Fahare extends JavaPlugin implements Listener {
         creator = new WorldCreator(fakeOverworldKey).copy(overworld()).seed(RANDOM.nextLong());
         creator.createWorld();
 
-        // Teleport players to real overworld
+        // Register events and tasks
+        Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getScheduler().runTaskTimer(this, () -> {
+            // Teleport players to real overworld
             Location destination = fakeOverworld().getSpawnLocation();
             for (Player player : overworld().getPlayers()) {
                 player.teleport(destination);
@@ -79,7 +109,15 @@ public final class Fahare extends JavaPlugin implements Listener {
         }, 1, 1);
     }
 
-    private void deleteNextWorld(List<World> worlds) {
+    private void loadConfig() {
+        saveDefaultConfig();
+        reloadConfig();
+        var config = getConfig();
+        backup = config.getBoolean("backup", backup);
+        autoReset = config.getBoolean("auto-reset", autoReset);
+    }
+
+    private void deleteNextWorld(List<World> worlds, @Nullable Path backupDestination) {
         // check if all worlds are deleted
         if (worlds.isEmpty()) {
             World overworld = fakeOverworld();
@@ -93,7 +131,7 @@ public final class Fahare extends JavaPlugin implements Listener {
 
         // check if worlds are ticking
         if (Bukkit.isTickingWorlds()) {
-            Bukkit.getScheduler().runTaskLater(this, () -> deleteNextWorld(worlds), 1);
+            Bukkit.getScheduler().runTaskLater(this, () -> deleteNextWorld(worlds, backupDestination), 1);
             return;
         }
 
@@ -105,12 +143,19 @@ public final class Fahare extends JavaPlugin implements Listener {
         creator.copy(world).seed(RANDOM.nextLong());
 
         // unload world
-        if (Bukkit.unloadWorld(world, false)) {
+        if (Bukkit.unloadWorld(world, backup)) {
             try {
-                // delete world
-                Path worldFolder = new File(Bukkit.getWorldContainer(), worldName).toPath();
-                getComponentLogger().info(translatable("fhr.log.delete", text(worldFolder.toString())));
-                IOUtils.deleteDirectory(worldFolder);
+                Path worldFolder = worldContainer.resolve(worldName);
+                Component arg = text(worldFolder.toString());
+                if (backupDestination != null) {
+                    // Backup world
+                    getComponentLogger().info(translatable("fhr.log.backup", arg));
+                    Files.move(worldFolder, backupDestination.resolve(worldName));
+                } else {
+                    // Delete world
+                    getComponentLogger().info(translatable("fhr.log.delete", arg));
+                    IOUtils.deleteDirectory(worldFolder);
+                }
 
                 // create new world
                 creator.createWorld();
@@ -124,7 +169,7 @@ public final class Fahare extends JavaPlugin implements Listener {
             Bukkit.getServer().sendMessage(translatable("fhr.error", NamedTextColor.RED, worldKey));
         }
 
-        Bukkit.getScheduler().runTaskLater(this, () -> deleteNextWorld(worlds), 1);
+        Bukkit.getScheduler().runTaskLater(this, () -> deleteNextWorld(worlds, backupDestination), 1);
     }
 
     public void reset() {
@@ -141,14 +186,32 @@ public final class Fahare extends JavaPlugin implements Listener {
             Bukkit.getScheduler().runTaskLater(this, this::reset, 1);
             return;
         }
+        // calculate backup folder
+        Path backupDestination = null;
+        if (backup && backupContainer != null) {
+            String baseName = ISO_LOCAL_DATE.format(LocalDate.now());
+            int attempt = 1;
+            do {
+                String name = baseName + '-' + attempt++;
+                backupDestination = backupContainer.resolve(name);
+            } while (Files.exists(backupDestination));
+            try {
+                Files.createDirectory(backupDestination);
+            } catch (Exception e) {
+                getComponentLogger().error(translatable("fhr.log.backup-subfolder", text(backupDestination.toString())), e);
+                backupDestination = null;
+            }
+        }
         // unload and delete worlds
         List<World> worlds = Bukkit.getWorlds().stream()
                 .filter(w -> !w.getKey().equals(limboWorldKey) && !w.getKey().equals(REAL_OVERWORLD_KEY))
                 .collect(Collectors.toList());
-        deleteNextWorld(worlds);
+        deleteNextWorld(worlds, backupDestination);
     }
 
     public void resetCheck() {
+        if (!autoReset)
+            return;
         Collection<? extends Player> players = Bukkit.getOnlinePlayers();
         if (players.isEmpty())
             return;

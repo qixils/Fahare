@@ -1,0 +1,6 @@
+# Whether to save and backup worlds before resetting.
+backup: true
+
+# Whether deletion should happen automatically.
+# Disabling this will require you to run the `/fahare reset` command.
+auto-reset: true
