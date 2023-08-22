@@ -1,10 +1,11 @@
 plugins {
     id 'java'
     id 'xyz.jpenilla.run-paper' version '2.1.0'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'dev.qixils'
-version = '1.0.2-SNAPSHOT'
+version = '1.1.0-SNAPSHOT'
 def mcVersion = '1.19.3'
 
 repositories {
@@ -21,6 +22,8 @@ repositories {
 
 dependencies {
     compileOnly "io.papermc.paper:paper-api:$mcVersion-R0.1-SNAPSHOT"
+    implementation "cloud.commandframework:cloud-paper:1.8.3"
+    implementation "cloud.commandframework:cloud-minecraft-extras:1.8.3"
 }
 
 def targetJavaVersion = 17
@@ -52,4 +55,9 @@ processResources {
     filesMatching('plugin.yml') {
         expand props
     }
+}
+
+shadowJar {
+    relocate 'cloud.commandframework', 'dev.qixils.fahare.shadow.cloud'
+    minimize()
 }

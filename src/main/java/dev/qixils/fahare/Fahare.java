@@ -1,5 +1,10 @@
 package dev.qixils.fahare;
 
+import cloud.commandframework.Command;
+import cloud.commandframework.bukkit.CloudBukkitCapabilities;
+import cloud.commandframework.execution.CommandExecutionCoordinator;
+import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler;
+import cloud.commandframework.paper.PaperCommandManager;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -7,6 +12,7 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
 import net.kyori.adventure.util.UTF8ResourceBundleControl;
 import org.bukkit.*;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,23 +27,15 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
-
-// TODO: manual reset command
 
 public final class Fahare extends JavaPlugin implements Listener {
 
@@ -73,7 +71,7 @@ public final class Fahare extends JavaPlugin implements Listener {
             try {
                 Files.createDirectory(backupContainer);
             } catch (Exception e) {
-                getComponentLogger().error(translatable("fhr.log.backup-folder"), e);
+                getComponentLogger().error(translatable("fhr.log.error.backup-folder"), e);
                 backupContainer = null;
             }
         }
@@ -97,6 +95,37 @@ public final class Fahare extends JavaPlugin implements Listener {
         // Create fake overworld
         creator = new WorldCreator(fakeOverworldKey).copy(overworld()).seed(RANDOM.nextLong());
         creator.createWorld();
+
+        // Register commands
+        try {
+            final PaperCommandManager<CommandSender> commandManager = PaperCommandManager.createNative(this, CommandExecutionCoordinator.simpleCoordinator());
+            if (commandManager.hasCapability(CloudBukkitCapabilities.BRIGADIER)) {
+                try {
+                    commandManager.registerBrigadier();
+                } catch (Exception ignored) {
+                }
+            }
+
+            // Commands
+            // TODO: help command
+            // TODO: i18n descriptions
+            Command.Builder<CommandSender> cmd = commandManager.commandBuilder("fahare");
+            commandManager.command(cmd
+                    .literal("reset")
+                    .permission("fahare.reset")
+                    .handler(c -> {
+                        c.getSender().sendMessage(translatable("fhr.chat.resetting"));
+                        reset();
+                    }));
+
+            // Exception handler
+            new MinecraftExceptionHandler<CommandSender>()
+                    .withDefaultHandlers()
+                    .withDecorator(component -> component.colorIfAbsent(NamedTextColor.RED))
+                    .apply(commandManager, sender -> sender);
+        } catch (Exception e) {
+            getComponentLogger().error(translatable("fhr.log.error.commands"), e);
+        }
 
         // Register events and tasks
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -149,24 +178,24 @@ public final class Fahare extends JavaPlugin implements Listener {
                 Component arg = text(worldFolder.toString());
                 if (backupDestination != null) {
                     // Backup world
-                    getComponentLogger().info(translatable("fhr.log.backup", arg));
+                    getComponentLogger().info(translatable("fhr.log.info.backup", arg));
                     Files.move(worldFolder, backupDestination.resolve(worldName));
                 } else {
                     // Delete world
-                    getComponentLogger().info(translatable("fhr.log.delete", arg));
+                    getComponentLogger().info(translatable("fhr.log.info.delete", arg));
                     IOUtils.deleteDirectory(worldFolder);
                 }
 
                 // create new world
                 creator.createWorld();
-                Bukkit.getServer().sendMessage(translatable("fhr.success", worldKey));
+                Bukkit.getServer().sendMessage(translatable("fhr.chat.success", worldKey));
             } catch (Exception e) {
-                Component error = translatable("fhr.error", NamedTextColor.RED, worldKey);
+                Component error = translatable("fhr.chat.error", NamedTextColor.RED, worldKey);
                 Audience.audience(Bukkit.getOnlinePlayers()).sendMessage(error);
                 getComponentLogger().warn(error, e);
             }
         } else {
-            Bukkit.getServer().sendMessage(translatable("fhr.error", NamedTextColor.RED, worldKey));
+            Bukkit.getServer().sendMessage(translatable("fhr.chat.error", NamedTextColor.RED, worldKey));
         }
 
         Bukkit.getScheduler().runTaskLater(this, () -> deleteNextWorld(worlds, backupDestination), 1);
@@ -198,7 +227,7 @@ public final class Fahare extends JavaPlugin implements Listener {
             try {
                 Files.createDirectory(backupDestination);
             } catch (Exception e) {
-                getComponentLogger().error(translatable("fhr.log.backup-subfolder", text(backupDestination.toString())), e);
+                getComponentLogger().error(translatable("fhr.log.error.backup-subfolder", text(backupDestination.toString())), e);
                 backupDestination = null;
             }
         }
@@ -245,7 +274,7 @@ public final class Fahare extends JavaPlugin implements Listener {
         // check if player is coming from the end, and if so just send them to spawn
         if (event.getPortalType() == PortalType.ENDER)
             event.setTo(fakeOverworld().getSpawnLocation());
-        // else just update the world
+            // else just update the world
         else
             to.setWorld(fakeOverworld());
     }
@@ -260,7 +289,7 @@ public final class Fahare extends JavaPlugin implements Listener {
         // check if player is coming from the end, and if so just send them to spawn
         if (event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL)
             event.setTo(fakeOverworld().getSpawnLocation());
-        // else just update the world
+            // else just update the world
         else
             to.setWorld(fakeOverworld());
     }
