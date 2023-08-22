@@ -2,13 +2,18 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2023-08-21
+
 ### Added
 
-- Added a plugin config with various settings
+- Configuration file with various settings
+- `/fahare reset` command to manually reset the world (requires `fahare.reset` permission)
+- Optional config setting to disable the automatic reset feature in favor of the reset command
+- Optional config setting to reset the world on *any* player death, not just when all players die
+
+### Changed
+
 - Deleted worlds are now backed up in the `fahare-backups` folder by default (configurable)
-- Added a `/fahare reset` command to manually reset the world (requires `fahare.reset` permission)
-- Added a new optional config setting to disable the automatic reset feature in favor of the reset command
-- Added a new optional config setting to reset the world on *any* player death, not just when all players die
 
 ## [1.0.1] - 2023-08-07
 
@@ -30,6 +35,7 @@
 - Support for Paper 1.19.3+
 - English translation
 
-[unreleased]: https://github.com/qixils/fahare/compare/v1.0.1...HEAD
+[unreleased]: https://github.com/qixils/fahare/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/qixils/fahare/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/qixils/fahare/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/qixils/fahare/releases/tag/v1.0.0
