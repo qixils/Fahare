@@ -49,6 +49,7 @@ public final class Fahare extends JavaPlugin implements Listener {
     // config
     private boolean backup = true;
     private boolean autoReset = true;
+    private boolean anyDeath = false;
 
     private static @NotNull World overworld() {
         return Objects.requireNonNull(Bukkit.getWorld(REAL_OVERWORLD_KEY), "Overworld not found");
@@ -144,6 +145,7 @@ public final class Fahare extends JavaPlugin implements Listener {
         var config = getConfig();
         backup = config.getBoolean("backup", backup);
         autoReset = config.getBoolean("auto-reset", autoReset);
+        anyDeath = config.getBoolean("any-death", anyDeath);
     }
 
     private void deleteNextWorld(List<World> worlds, @Nullable Path backupDestination) {
@@ -238,9 +240,13 @@ public final class Fahare extends JavaPlugin implements Listener {
         deleteNextWorld(worlds, backupDestination);
     }
 
-    public void resetCheck() {
+    public void resetCheck(boolean death) {
         if (!autoReset)
             return;
+        if (anyDeath && death) {
+            reset();
+            return;
+        }
         Collection<? extends Player> players = Bukkit.getOnlinePlayers();
         if (players.isEmpty())
             return;
@@ -259,7 +265,7 @@ public final class Fahare extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskLater(this, () -> {
             player.setGameMode(GameMode.SPECTATOR);
             player.spigot().respawn();
-            resetCheck();
+            resetCheck(true);
         }, 1);
     }
 

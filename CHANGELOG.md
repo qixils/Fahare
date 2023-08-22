@@ -7,10 +7,8 @@
 - Added a plugin config with various settings
 - Deleted worlds are now backed up in the `fahare-backups` folder by default (configurable)
 - Added a `/fahare reset` command to manually reset the world
-
-### Changed
-
-- Through the config, you can now disable the automatic reset feature in favor of the reset command
+- Added a new optional config setting to disable the automatic reset feature in favor of the reset command
+- Added a new optional config setting to reset the world on *any* player death, not just when all players die
 
 ## [1.0.1] - 2023-08-07
 

@@ -4,3 +4,8 @@ backup: true
 # Whether deletion should happen automatically.
 # Disabling this will require you to run the `/fahare reset` command.
 auto-reset: true
+
+# Whether to trigger a reset upon *any* death.
+# Default behavior is to reset only when all players are dead.
+# This setting is ignored if `auto-reset` is disabled.
+any-death: false
