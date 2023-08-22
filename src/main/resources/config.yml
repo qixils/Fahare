@@ -1,11 +1,12 @@
 # Whether to save and backup worlds before resetting.
+# When disabled, worlds will be permanently deleted upon reset (much faster).
 backup: true
 
-# Whether deletion should happen automatically.
-# Disabling this will require you to run the `/fahare reset` command.
+# Whether resets should happen automatically upon the death of all players.
+# When disabled, you may instead run `/fahare reset` to manually reset the world.
 auto-reset: true
 
 # Whether to trigger a reset upon *any* death.
-# Default behavior is to reset only when all players are dead.
+# When disabled, automatic resets will trigger only when all players are dead.
 # This setting is ignored if `auto-reset` is disabled.
 any-death: false
