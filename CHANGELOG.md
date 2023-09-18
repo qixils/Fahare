@@ -5,6 +5,7 @@
 ### Changed
 
 - Player inventories, ender chests, and XP are now cleared on reset
+- The server should no longer attempt multiple resets at the same time
 
 ## [1.1.0] - 2023-08-21
 

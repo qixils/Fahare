@@ -46,6 +46,7 @@ public final class Fahare extends JavaPlugin implements Listener {
     private World limboWorld;
     private Path worldContainer;
     private @Nullable Path backupContainer;
+    private boolean resetting = false;
     // config
     private boolean backup = true;
     private boolean autoReset = true;
@@ -157,6 +158,7 @@ public final class Fahare extends JavaPlugin implements Listener {
                 player.setGameMode(GameMode.SURVIVAL);
                 player.teleport(spawn);
             }
+            resetting = false;
             return;
         }
 
@@ -203,7 +205,9 @@ public final class Fahare extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskLater(this, () -> deleteNextWorld(worlds, backupDestination), 1);
     }
 
-    public void reset() {
+    public synchronized void reset() {
+        if (resetting)
+            return;
         if (limboWorld == null)
             return;
         // teleport all players to limbo
@@ -221,6 +225,7 @@ public final class Fahare extends JavaPlugin implements Listener {
             Bukkit.getScheduler().runTaskLater(this, this::reset, 1);
             return;
         }
+        resetting = true;
         // calculate backup folder
         Path backupDestination = null;
         if (backup && backupContainer != null) {
