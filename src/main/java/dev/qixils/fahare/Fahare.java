@@ -210,6 +210,10 @@ public final class Fahare extends JavaPlugin implements Listener {
         Location destination = new Location(limboWorld, 0, 100, 0);
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.setGameMode(GameMode.SPECTATOR);
+            player.getInventory().clear();
+            player.getEnderChest().clear();
+            player.setLevel(0);
+            player.setExp(0);
             player.teleport(destination);
         }
         // check if worlds are ticking

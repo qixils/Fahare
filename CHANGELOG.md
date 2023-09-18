@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Player inventories, ender chests, and XP are now cleared on reset
+
 ## [1.1.0] - 2023-08-21
 
 ### Added
