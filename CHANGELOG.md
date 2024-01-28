@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+N/A
+
+## [1.2.0] - 2024-01-27
+
+### Added
+
+- New config option "lives" which specifies how many deaths each player is allowed
+
+### Changed
+
+- Spectators no longer inherently count as dead players
+
+### Fixed
+
+- Removed a rare freeze on reset by forcefully loading and recreating the fake overworld
+
 ## [1.1.1] - 2023-09-17
 
 ### Changed
@@ -42,7 +58,8 @@
 - Support for Paper 1.19.3+
 - English translation
 
-[unreleased]: https://github.com/qixils/fahare/compare/v1.1.1...HEAD
+[unreleased]: https://github.com/qixils/fahare/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/qixils/fahare/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/qixils/fahare/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/qixils/fahare/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/qixils/fahare/compare/v1.0.0...v1.0.1

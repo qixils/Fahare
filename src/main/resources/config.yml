@@ -10,3 +10,6 @@ auto-reset: true
 # When disabled, automatic resets will trigger only when all players are dead.
 # This setting is ignored if `auto-reset` is disabled.
 any-death: false
+
+# How many lives a player should have before they are considered dead.
+lives: 1

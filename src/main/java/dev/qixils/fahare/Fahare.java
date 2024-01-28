@@ -43,6 +43,7 @@ public final class Fahare extends JavaPlugin implements Listener {
     private static final Random RANDOM = new Random();
     private final NamespacedKey fakeOverworldKey = new NamespacedKey(this, "overworld");
     private final NamespacedKey limboWorldKey = new NamespacedKey(this, "limbo");
+    private final Map<UUID, Integer> deaths = new HashMap<>();
     private World limboWorld;
     private Path worldContainer;
     private @Nullable Path backupContainer;
@@ -51,13 +52,20 @@ public final class Fahare extends JavaPlugin implements Listener {
     private boolean backup = true;
     private boolean autoReset = true;
     private boolean anyDeath = false;
+    private int lives = 1;
 
     private static @NotNull World overworld() {
         return Objects.requireNonNull(Bukkit.getWorld(REAL_OVERWORLD_KEY), "Overworld not found");
     }
 
     private @NotNull World fakeOverworld() {
-        return Objects.requireNonNull(Bukkit.getWorld(fakeOverworldKey), "Fake overworld not found");
+        return Objects.requireNonNullElseGet(Bukkit.getWorld(fakeOverworldKey), this::createFakeOverworld);
+    }
+
+    private @NotNull World createFakeOverworld() {
+        // Create fake overworld
+        WorldCreator creator = new WorldCreator(fakeOverworldKey).copy(overworld()).seed(RANDOM.nextLong());
+        return Objects.requireNonNull(creator.createWorld(), "Could not load fake overworld");
     }
 
     @Override
@@ -95,8 +103,7 @@ public final class Fahare extends JavaPlugin implements Listener {
         limboWorld = creator.createWorld();
 
         // Create fake overworld
-        creator = new WorldCreator(fakeOverworldKey).copy(overworld()).seed(RANDOM.nextLong());
-        creator.createWorld();
+        World fakeOverworld = createFakeOverworld();
 
         // Register commands
         try {
@@ -132,8 +139,8 @@ public final class Fahare extends JavaPlugin implements Listener {
         // Register events and tasks
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getScheduler().runTaskTimer(this, () -> {
-            // Teleport players to real overworld
-            Location destination = fakeOverworld().getSpawnLocation();
+            // Teleport players from real overworld
+            Location destination = fakeOverworld.getSpawnLocation();
             for (Player player : overworld().getPlayers()) {
                 player.teleport(destination);
             }
@@ -147,6 +154,23 @@ public final class Fahare extends JavaPlugin implements Listener {
         backup = config.getBoolean("backup", backup);
         autoReset = config.getBoolean("auto-reset", autoReset);
         anyDeath = config.getBoolean("any-death", anyDeath);
+        lives = Math.max(1, config.getInt("lives", lives));
+    }
+
+    public int getDeathsFor(UUID player) {
+        return deaths.getOrDefault(player, 0);
+    }
+
+    public void addDeathTo(UUID player) {
+        deaths.put(player, getDeathsFor(player)+1);
+    }
+
+    public boolean isDead(UUID player) {
+        return getDeathsFor(player) >= lives;
+    }
+
+    public boolean isAlive(UUID player) {
+        return !isDead(player);
     }
 
     private void deleteNextWorld(List<World> worlds, @Nullable Path backupDestination) {
@@ -210,6 +234,7 @@ public final class Fahare extends JavaPlugin implements Listener {
             return;
         if (limboWorld == null)
             return;
+        deaths.clear();
         // teleport all players to limbo
         Location destination = new Location(limboWorld, 0, 100, 0);
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -260,17 +285,18 @@ public final class Fahare extends JavaPlugin implements Listener {
         if (players.isEmpty())
             return;
         for (Player player : players) {
-            if (player.getGameMode() != GameMode.SPECTATOR)
+            if (isAlive(player.getUniqueId()))
                 return;
         }
         reset();
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDeath(PlayerDeathEvent event) {
-        if (event.isCancelled())
-            return;
         Player player = event.getEntity();
+        addDeathTo(player.getUniqueId());
+        if (isAlive(player.getUniqueId()))
+            return;
         Bukkit.getScheduler().runTaskLater(this, () -> {
             player.setGameMode(GameMode.SPECTATOR);
             player.spigot().respawn();
