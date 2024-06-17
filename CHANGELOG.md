@@ -2,9 +2,10 @@
 
 ## [Unreleased]
 
-### Added
+### Changed
 
 - Health and hunger are now reset for all online players when starting a new world (#1)
+- The difficulty of the original overworld is now copied onto the newly generated world (#3)
 
 ## [1.2.0] - 2024-01-27
 

@@ -65,7 +65,9 @@ public final class Fahare extends JavaPlugin implements Listener {
     private @NotNull World createFakeOverworld() {
         // Create fake overworld
         WorldCreator creator = new WorldCreator(fakeOverworldKey).copy(overworld()).seed(RANDOM.nextLong());
-        return Objects.requireNonNull(creator.createWorld(), "Could not load fake overworld");
+        World world = Objects.requireNonNull(creator.createWorld(), "Could not load fake overworld");
+        world.setDifficulty(overworld().getDifficulty());
+        return world;
     }
 
     @Override
