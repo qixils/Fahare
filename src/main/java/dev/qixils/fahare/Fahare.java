@@ -244,6 +244,9 @@ public final class Fahare extends JavaPlugin implements Listener {
             player.setLevel(0);
             player.setExp(0);
             player.teleport(destination);
+            player.setHealth(20);
+            player.setFoodLevel(20);
+            player.setSaturation(5);
         }
         // check if worlds are ticking
         if (Bukkit.isTickingWorlds()) {

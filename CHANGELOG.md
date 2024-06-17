@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-N/A
+### Added
+
+- Health and hunger are now reset for all online players when starting a new world (#1)
 
 ## [1.2.0] - 2024-01-27
 
