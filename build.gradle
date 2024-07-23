@@ -1,11 +1,11 @@
 plugins {
     id 'java'
-    id 'xyz.jpenilla.run-paper' version '2.1.0'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'xyz.jpenilla.run-paper' version '2.3.0'
+    id("io.github.goooler.shadow") version "8.1.8"
 }
 
 group = 'dev.qixils'
-version = '1.2.1-SNAPSHOT'
+version = '1.2.1'
 def mcVersion = '1.19.3'
 
 repositories {
@@ -22,8 +22,8 @@ repositories {
 
 dependencies {
     compileOnly "io.papermc.paper:paper-api:$mcVersion-R0.1-SNAPSHOT"
-    implementation "cloud.commandframework:cloud-paper:1.8.3" // TODO: maybe move away from cloud to shed a megabyte of dependencies
-    implementation "cloud.commandframework:cloud-minecraft-extras:1.8.3"
+    implementation "cloud.commandframework:cloud-paper:1.8.4" // TODO: maybe move away from cloud to shed a megabyte of dependencies
+    implementation "cloud.commandframework:cloud-minecraft-extras:1.8.4"
 }
 
 def targetJavaVersion = 17
