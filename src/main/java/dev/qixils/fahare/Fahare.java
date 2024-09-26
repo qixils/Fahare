@@ -53,6 +53,7 @@ public final class Fahare extends JavaPlugin implements Listener {
     private boolean autoReset = true;
     private boolean anyDeath = false;
     private int lives = 1;
+    private final List<UUID> playersToClear = new ArrayList<>();
 
     private static @NotNull World overworld() {
         return Objects.requireNonNull(Bukkit.getWorld(REAL_OVERWORLD_KEY), "Overworld not found");
@@ -164,7 +165,7 @@ public final class Fahare extends JavaPlugin implements Listener {
     }
 
     public void addDeathTo(UUID player) {
-        deaths.put(player, getDeathsFor(player)+1);
+        deaths.put(player, getDeathsFor(player) + 1);
     }
 
     public boolean isDead(UUID player) {
@@ -231,6 +232,18 @@ public final class Fahare extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskLater(this, () -> deleteNextWorld(worlds, backupDestination), 1);
     }
 
+    private void resetPlayer(Player player, World world) {
+        player.setGameMode(GameMode.SPECTATOR);
+        player.getInventory().clear();
+        player.getEnderChest().clear();
+        player.setLevel(0);
+        player.setExp(0);
+        player.teleport(new Location(world, 0, 100, 0));
+        player.setHealth(20);
+        player.setFoodLevel(20);
+        player.setSaturation(5);
+    }
+
     public synchronized void reset() {
         if (resetting)
             return;
@@ -238,17 +251,11 @@ public final class Fahare extends JavaPlugin implements Listener {
             return;
         deaths.clear();
         // teleport all players to limbo
-        Location destination = new Location(limboWorld, 0, 100, 0);
         for (Player player : Bukkit.getOnlinePlayers()) {
-            player.setGameMode(GameMode.SPECTATOR);
-            player.getInventory().clear();
-            player.getEnderChest().clear();
-            player.setLevel(0);
-            player.setExp(0);
-            player.teleport(destination);
-            player.setHealth(20);
-            player.setFoodLevel(20);
-            player.setSaturation(5);
+            resetPlayer(player, limboWorld);
+        }
+        for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+            playersToClear.add(player.getUniqueId());
         }
         // check if worlds are ticking
         if (Bukkit.isTickingWorlds()) {
@@ -345,12 +352,13 @@ public final class Fahare extends JavaPlugin implements Listener {
         Player player = event.getPlayer();
         if (player.getWorld().getKey().equals(REAL_OVERWORLD_KEY))
             player.teleport(fakeOverworld().getSpawnLocation());
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-        Location destination = event.getRespawnLocation();
-        if (destination.getWorld().getKey().equals(REAL_OVERWORLD_KEY))
-            event.setRespawnLocation(fakeOverworld().getSpawnLocation());
+        if (playersToClear.contains(player.getUniqueId())) {
+            playersToClear.remove(player.getUniqueId());
+            resetPlayer(player, Bukkit.getWorld(limboWorldKey));
+            World overworld = fakeOverworld();
+            Location spawn = overworld.getSpawnLocation();
+            player.setGameMode(GameMode.SURVIVAL);
+            player.teleport(spawn);
+        }
     }
 }
