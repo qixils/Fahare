@@ -13,3 +13,8 @@ any-death: false
 
 # How many lives a player should have before they are considered dead.
 lives: 1
+
+# Set seed togle
+setSeed: false
+# Seed for the world to generate with.
+Seed: 0
