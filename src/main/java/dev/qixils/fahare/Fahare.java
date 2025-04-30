@@ -53,6 +53,8 @@ public final class Fahare extends JavaPlugin implements Listener {
     private boolean autoReset = true;
     private boolean anyDeath = false;
     private int lives = 1;
+    private boolean setSeed = false;
+    private long Seed = 0;
 
     private static @NotNull World overworld() {
         return Objects.requireNonNull(Bukkit.getWorld(REAL_OVERWORLD_KEY), "Overworld not found");
@@ -65,6 +67,14 @@ public final class Fahare extends JavaPlugin implements Listener {
     private @NotNull World createFakeOverworld() {
         // Create fake overworld
         WorldCreator creator = new WorldCreator(fakeOverworldKey).copy(overworld()).seed(RANDOM.nextLong());
+        World world = Objects.requireNonNull(creator.createWorld(), "Could not load fake overworld");
+        world.setDifficulty(overworld().getDifficulty());
+        return world;
+    }
+
+    private @NotNull World createFakeOverworldSetSeed() {
+        // Create fake overworld
+        WorldCreator creator = new WorldCreator(fakeOverworldKey).copy(overworld()).seed(Seed);
         World world = Objects.requireNonNull(creator.createWorld(), "Could not load fake overworld");
         world.setDifficulty(overworld().getDifficulty());
         return world;
@@ -105,7 +115,13 @@ public final class Fahare extends JavaPlugin implements Listener {
         limboWorld = creator.createWorld();
 
         // Create fake overworld
-        World fakeOverworld = createFakeOverworld();
+        World fakeOverworld;
+        if (setSeed == true) {
+            fakeOverworld = createFakeOverworldSetSeed();
+        } else {
+            fakeOverworld = createFakeOverworld();
+        }
+
 
         // Register commands
         try {
@@ -157,6 +173,8 @@ public final class Fahare extends JavaPlugin implements Listener {
         autoReset = config.getBoolean("auto-reset", autoReset);
         anyDeath = config.getBoolean("any-death", anyDeath);
         lives = Math.max(1, config.getInt("lives", lives));
+        setSeed = config.getBoolean("setSeed", setSeed);
+        Seed = Math.max(1, config.getLong("Seed", Seed));
     }
 
     public int getDeathsFor(UUID player) {
@@ -199,7 +217,12 @@ public final class Fahare extends JavaPlugin implements Listener {
         String worldName = world.getName();
         Component worldKey = text(worldName);
         WorldCreator creator = new WorldCreator(worldName, world.getKey());
-        creator.copy(world).seed(RANDOM.nextLong());
+        if (setSeed == true) {
+            creator.copy(world).seed(Seed);
+        } else {
+            creator.copy(world).seed(RANDOM.nextLong());
+        }
+        
 
         // unload world
         if (Bukkit.unloadWorld(world, backup)) {
