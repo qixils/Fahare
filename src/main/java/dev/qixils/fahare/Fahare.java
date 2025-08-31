@@ -64,7 +64,9 @@ public final class Fahare extends JavaPlugin implements Listener {
 
     private @NotNull World createFakeOverworld() {
         // Create fake overworld
-        WorldCreator creator = new WorldCreator(fakeOverworldKey).copy(overworld()).seed(RANDOM.nextLong());
+        long seed = RANDOM.nextLong();
+        getComponentLogger().info(translatable("fhr.log.overworld-seed", text(seed)));
+        WorldCreator creator = new WorldCreator(fakeOverworldKey).copy(overworld()).seed(seed);
         World world = Objects.requireNonNull(creator.createWorld(), "Could not load fake overworld");
         world.setDifficulty(overworld().getDifficulty());
         return world;
@@ -199,7 +201,9 @@ public final class Fahare extends JavaPlugin implements Listener {
         String worldName = world.getName();
         Component worldKey = text(worldName);
         WorldCreator creator = new WorldCreator(worldName, world.getKey());
-        creator.copy(world).seed(RANDOM.nextLong());
+        long seed = RANDOM.nextLong();
+        getComponentLogger().info(translatable("fhr.log.seed", worldKey, text(seed)));
+        creator.copy(world).seed(seed);
 
         // unload world
         if (Bukkit.unloadWorld(world, backup)) {

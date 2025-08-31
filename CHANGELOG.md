@@ -1,5 +1,11 @@
 # Changelog
 
+## [unreleased] - 2025-08-31
+
+### Added
+
+- Newly generated worlds log their seeds to console
+
 ## [1.2.1] - 2024-07-22
 
 ### Changed
