@@ -2,7 +2,9 @@
 
 ## [unreleased] - XXXX-XX-XX
 
-N/A
+### Added
+
+- `FahareResetEvent` allows developers to perform actions after a reset is finished (@DeltaJordan)
 
 ## [1.3.1] - 2026-01-27
 
