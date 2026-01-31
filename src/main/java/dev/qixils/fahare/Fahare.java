@@ -42,6 +42,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import dev.qixils.fahare.events.FahareResetEvent;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
@@ -294,6 +295,13 @@ public final class Fahare extends JavaPlugin implements Listener {
                 player.setGameMode(GameMode.SURVIVAL);
                 player.teleport(spawn);
             }
+
+            try {
+                new FahareResetEvent(overworld).callEvent();
+            } catch (Exception e) {
+                getComponentLogger().error(translatable("fhr.log.error.reset-event"), e);
+            }
+
             resetting = false;
             return;
         }
