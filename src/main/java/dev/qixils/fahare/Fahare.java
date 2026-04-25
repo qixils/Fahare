@@ -330,7 +330,17 @@ public final class Fahare extends JavaPlugin implements Listener {
         // unload world
         if (Bukkit.unloadWorld(world, backup)) {
             try {
-                Path worldFolder = worldContainer.resolve(worldName);
+                NamespacedKey key = world.getKey();
+
+                // Get the actual primary world folder name (usually "world")
+                String primaryWorldName = Bukkit.getWorlds().get(0).getName();
+
+                Path worldFolder = worldContainer
+                    .resolve(primaryWorldName)
+                    .resolve("dimensions")
+                    .resolve(key.getNamespace())
+                    .resolve(key.getKey());
+                
                 Component arg = text(worldFolder.toString());
                 if (backupDestination != null) {
                     // Backup world
