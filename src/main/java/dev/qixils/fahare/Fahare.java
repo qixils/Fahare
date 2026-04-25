@@ -98,7 +98,7 @@ public final class Fahare extends JavaPlugin implements Listener {
         Difficulty difficulty = getNewDifficulty();
         long seed = getNewSeed();
         getComponentLogger().info(translatable("fhr.log.overworld-seed", text(seed)));
-        WorldCreator creator = WorldCreator.of(fakeOverworldKey)
+        WorldCreator creator = new WorldCreator(fakeOverworldKey)
                 .copy(overworld())
                 .seed(seed)
                 .hardcore(getNewHardcore(difficulty));
@@ -185,7 +185,7 @@ public final class Fahare extends JavaPlugin implements Listener {
         GlobalTranslator.translator().addSource(registry);
 
         // Create limbo world
-        WorldCreator creator = WorldCreator.of(limboWorldKey)
+        WorldCreator creator = new WorldCreator(limboWorldKey)
                 .type(WorldType.FLAT)
                 .generateStructures(false)
                 .generatorSettings("{\"biome\":\"minecraft:the_end\",\"layers\":[{\"block\":\"minecraft:air\",\"height\":1}]}");
@@ -316,7 +316,7 @@ public final class Fahare extends JavaPlugin implements Listener {
         World world = worlds.remove(0);
         String worldName = world.getName();
         Component worldKey = text(worldName);
-        WorldCreator creator = WorldCreator.of(world.getKey());
+        WorldCreator creator = new WorldCreator(world.getKey());
 
         Difficulty difficulty = getNewDifficulty();
         long seed = getNewSeed();
