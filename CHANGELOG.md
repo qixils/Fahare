@@ -2,9 +2,15 @@
 
 ## [unreleased] - XXXX-XX-XX
 
+## [1.4.0] - 2026-05-31
+
 ### Added
 
 - `FahareResetEvent` allows developers to perform actions after a reset is finished (@DeltaJordan)
+
+### Changed
+
+- Updated to 26.1.x
 
 ## [1.3.1] - 2026-01-27
 
@@ -88,7 +94,8 @@
 - Support for Paper 1.19.3+
 - English translation
 
-[unreleased]: https://github.com/qixils/fahare/compare/v1.3.1...HEAD
+[unreleased]: https://github.com/qixils/fahare/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/qixils/fahare/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/qixils/fahare/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/qixils/fahare/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/qixils/fahare/compare/v1.2.0...v1.2.1

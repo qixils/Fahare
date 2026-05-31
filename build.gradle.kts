@@ -5,10 +5,10 @@ plugins {
 }
 
 group = "dev.qixils"
-version = "1.3.2-SNAPSHOT"
+version = "1.4.0"
 
-val mcVersion = "1.21.11"
-val targetJavaVersion = 21
+val mcVersion = "26.1.2"
+val targetJavaVersion = 25
 
 repositories {
     mavenCentral()
@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:$mcVersion-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:$mcVersion.build.+")
 }
 
 java {
