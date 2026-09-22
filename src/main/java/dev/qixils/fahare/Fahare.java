@@ -43,8 +43,10 @@ import java.util.stream.Collectors;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import dev.qixils.fahare.events.FahareResetEvent;
+import io.papermc.paper.event.player.AsyncPlayerSpawnLocationEvent;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public final class Fahare extends JavaPlugin implements Listener {
 
@@ -99,13 +101,15 @@ public final class Fahare extends JavaPlugin implements Listener {
         Difficulty difficulty = getNewDifficulty();
         long seed = getNewSeed();
         getComponentLogger().info(translatable("fhr.log.overworld-seed", text(seed)));
+        boolean hardcore = getNewHardcore(difficulty);
         WorldCreator creator = new WorldCreator(fakeOverworldKey)
                 .copy(overworld())
                 .seed(seed)
-                .hardcore(getNewHardcore(difficulty));
+                .hardcore(hardcore);
 
         World world = Objects.requireNonNull(creator.createWorld(), "Could not load fake overworld");
         world.setDifficulty(difficulty);
+        world.setHardcore(hardcore);
 
         return world;
     }
@@ -166,12 +170,15 @@ public final class Fahare extends JavaPlugin implements Listener {
                     getComponentLogger().info(translatable("fhr.log.info.missing-seed"));
                 }
 
-                String difficulty = properties.getProperty("difficulty", "");
-                try {
-                    forceDifficulty = Difficulty.valueOf(difficulty.toUpperCase(Locale.US));
-                    getComponentLogger().warn(translatable("fhr.log.info.difficulty", text(String.valueOf(forceDifficulty))));
-                } catch (Exception e) {
-                    getComponentLogger().warn(translatable("fhr.log.error.difficulty", text(difficulty)));
+                if (forceDifficulty == null) {
+                    String difficulty = properties.getProperty("difficulty", "");
+                    Difficulty parsed = parseDifficulty(difficulty);
+                    if (parsed != null) {
+                        forceDifficulty = parsed;
+                        getComponentLogger().info(translatable("fhr.log.info.difficulty", text(String.valueOf(forceDifficulty))));
+                    } else {
+                        getComponentLogger().warn(translatable("fhr.log.error.difficulty", text(difficulty)));
+                    }
                 }
             } catch (Exception e) {
                 getComponentLogger().warn(translatable("fhr.log.error.properties"), e);
@@ -230,6 +237,31 @@ public final class Fahare extends JavaPlugin implements Listener {
         autoReset = config.getBoolean("auto-reset", autoReset);
         anyDeath = config.getBoolean("any-death", anyDeath);
         lives = Math.max(1, config.getInt("lives", lives));
+        forceDifficulty = buildForceDifficulty(config.getString("difficulty", "normal").trim());
+    }
+
+    private Difficulty buildForceDifficulty(@NotNull String rawDifficulty) {
+        Difficulty difficulty = null;
+        if (!isBlank(rawDifficulty)) {
+            difficulty = parseDifficulty(rawDifficulty);
+            if (difficulty == null)
+                getComponentLogger().warn(translatable("fhr.log.error.difficulty", text(rawDifficulty)));
+            else
+                getComponentLogger().info(translatable("fhr.log.info.difficulty-config", text(String.valueOf(difficulty))));
+        }
+        return difficulty;
+    }
+
+    private static @Nullable Difficulty parseDifficulty(@NotNull String value) {
+        try {
+            return Difficulty.valueOf(value.toUpperCase(Locale.US));
+        } catch (IllegalArgumentException e) {
+            try {
+                return Difficulty.getByValue(Integer.parseInt(value.trim()));
+            } catch (Exception ignored) {
+                return null;
+            }
+        }
     }
 
     public int getDeathsFor(UUID player) {
@@ -322,13 +354,14 @@ public final class Fahare extends JavaPlugin implements Listener {
         WorldCreator creator = new WorldCreator(world.getKey());
 
         Difficulty difficulty = getNewDifficulty();
+        boolean hardcore = getNewHardcore(difficulty);
         long seed = getNewSeed();
         getComponentLogger().info(translatable("fhr.log.seed", worldKey, text(seed)));
 
         creator
                 .copy(world)
                 .seed(seed)
-                .hardcore(getNewHardcore(difficulty));
+                .hardcore(hardcore);
 
         // unload world
         if (Bukkit.unloadWorld(world, backup)) {
@@ -349,7 +382,8 @@ public final class Fahare extends JavaPlugin implements Listener {
                 World newWorld = creator.createWorld();
                 if (newWorld == null) throw new IllegalStateException("World was null");
 
-                world.setDifficulty(difficulty);
+                newWorld.setDifficulty(difficulty);
+                newWorld.setHardcore(hardcore);
 
                 Bukkit.getServer().sendMessage(translatable("fhr.chat.success", worldKey));
             } catch (Exception e) {
@@ -470,6 +504,18 @@ public final class Fahare extends JavaPlugin implements Listener {
             // else just update the world
         else
             to.setWorld(fakeOverworld());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onAsyncSpawnLocation(AsyncPlayerSpawnLocationEvent event) {
+        // Redirect the initial spawn location before the player entity/login packet is built,
+        // so the very first join already reports the fake overworld's hardcore/difficulty state.
+        World toWorld = event.getSpawnLocation().getWorld();
+        if (toWorld == null || !toWorld.getKey().equals(REAL_OVERWORLD_KEY)) return;
+
+        World fake = Bukkit.getWorld(fakeOverworldKey);
+        if (fake != null)
+            event.setSpawnLocation(fake.getSpawnLocation());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
