@@ -2,6 +2,14 @@
 
 ## [unreleased] - XXXX-XX-XX
 
+### Added
+
+- Arabic translation by rinad.online on Discord
+
+### Fixed
+
+- Difficulty is now properly set on regenerated worlds
+
 ## [1.4.0] - 2026-05-31
 
 ### Added

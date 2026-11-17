@@ -2,6 +2,7 @@ package dev.qixils.fahare;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import dev.qixils.fahare.events.FahareResetEvent;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -42,7 +43,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
-import dev.qixils.fahare.events.FahareResetEvent;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
@@ -181,7 +181,7 @@ public final class Fahare extends JavaPlugin implements Listener {
         // Register i18n
         TranslationStore.StringBased<MessageFormat> registry = TranslationStore.messageFormat(new NamespacedKey(this, "translations"));
         registry.defaultLocale(Locale.US);
-        for (Locale locale : List.of(Locale.US)) { // TODO: reflection
+        for (Locale locale : List.of(Locale.US, Locale.of("ar", "SA"))) { // TODO: reflection
             ResourceBundle bundle = ResourceBundle.getBundle("Fahare", locale);
             registry.registerAll(locale, bundle, false);
         }
@@ -199,16 +199,20 @@ public final class Fahare extends JavaPlugin implements Listener {
 
         // Register commands
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-            LiteralArgumentBuilder<CommandSourceStack> resetCommand = Commands.literal("fahare")
-                            .then(Commands.literal("reset")
-                                    .requires(Commands.restricted(source -> source.getSender().hasPermission(resetPerm)))
-                                    .executes(ctx -> {
-                                        ctx.getSource().getSender().sendMessage(translatable("fhr.chat.resetting"));
-                                        reset();
-                                        return Command.SINGLE_SUCCESS;
-                                    })
-                            );
-            commands.registrar().register(resetCommand.build());
+            try {
+                LiteralArgumentBuilder<CommandSourceStack> resetCommand = Commands.literal("fahare")
+                        .then(Commands.literal("reset")
+                                .requires(Commands.restricted(source -> source.getSender().hasPermission(resetPerm)))
+                                .executes(ctx -> {
+                                    ctx.getSource().getSender().sendMessage(translatable("fhr.chat.resetting"));
+                                    reset();
+                                    return Command.SINGLE_SUCCESS;
+                                })
+                        );
+                commands.registrar().register(resetCommand.build());
+            } catch (Exception e) {
+                getComponentLogger().warn(translatable("fhr.log.error.commands"), e);
+            }
         });
 
         // Register events and tasks
@@ -316,24 +320,24 @@ public final class Fahare extends JavaPlugin implements Listener {
         }
 
         // get world data
-        World world = worlds.removeFirst();
-        String worldName = world.getName();
+        World oldWorld = worlds.removeFirst();
+        String worldName = oldWorld.getName();
         Component worldKey = text(worldName);
-        WorldCreator creator = new WorldCreator(world.getKey());
+        WorldCreator creator = new WorldCreator(oldWorld.getKey());
 
         Difficulty difficulty = getNewDifficulty();
         long seed = getNewSeed();
         getComponentLogger().info(translatable("fhr.log.seed", worldKey, text(seed)));
 
         creator
-                .copy(world)
+                .copy(oldWorld)
                 .seed(seed)
                 .hardcore(getNewHardcore(difficulty));
 
         // unload world
-        if (Bukkit.unloadWorld(world, backup)) {
+        if (Bukkit.unloadWorld(oldWorld, backup)) {
             try {
-                Path worldFolder = worldContainer.resolve(levelName, "dimensions", world.key().namespace(), world.key().value());
+                Path worldFolder = worldContainer.resolve(levelName, "dimensions", oldWorld.key().namespace(), oldWorld.key().value());
                 Component arg = text(worldFolder.toString());
                 if (backupDestination != null) {
                     // Backup world
@@ -349,7 +353,7 @@ public final class Fahare extends JavaPlugin implements Listener {
                 World newWorld = creator.createWorld();
                 if (newWorld == null) throw new IllegalStateException("World was null");
 
-                world.setDifficulty(difficulty);
+                newWorld.setDifficulty(difficulty);
 
                 Bukkit.getServer().sendMessage(translatable("fhr.chat.success", worldKey));
             } catch (Exception e) {
